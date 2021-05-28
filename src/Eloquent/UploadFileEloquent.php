@@ -103,13 +103,17 @@ trait UploadFileEloquent
      *
      * @param string $field
      * @param mixed $file
-     * @return string
+     * @return string | null
      *
      * @throws Exception
      * @throws FileNotFoundException
      */
-    public function saveFilePath($field, $file): string
+    public function saveFilePath($field, $file)
     {
+        if (!$file) {
+            return null;
+        }
+
         if (!($file instanceof UploadedFile) && !is_string($file)) {
             throw new Exception('File path must is string or is instance of ' . UploadedFile::class);
         }

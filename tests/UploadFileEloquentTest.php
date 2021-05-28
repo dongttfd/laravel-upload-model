@@ -25,7 +25,6 @@ class UploadFileEloquentTest extends TestCase
     /** @test */
     public function testDefaultLocalDisk()
     {
-
         $this->fileModelInstance = new FileLocalModel();
         $this->fileModelInstance->setSaveOnDiskNull();
 
@@ -247,6 +246,18 @@ class UploadFileEloquentTest extends TestCase
 
         $this->fileModelInstance->delete();
         $this->assertFalse(Storage::disk('local')->exists('/files/' . $file->hashName()));
+    }
+
+    /** @test */
+    public function testFileNull()
+    {
+        $this->modelName = FileLocalModel::class;
+        $this->makeModel();
+
+        $fileModelInstance = $this->model->create(['path' => null]);
+        $this->assertTrue($fileModelInstance instanceof FileLocalModel);
+        $this->assertNull($fileModelInstance->path);
+        $this->assertNull($fileModelInstance->path_url);
     }
 
     /**

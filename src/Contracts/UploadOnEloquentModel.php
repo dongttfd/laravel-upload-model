@@ -17,12 +17,12 @@ interface UploadOnEloquentModel
      *
      * @param string $field
      * @param mix $file
-     * @return string
+     * @return string | null
      *
      * @throws Exception
      * @throws FileNotFoundException
      */
-    public function saveFilePath($field, $file): string;
+    public function saveFilePath($field, $file);
 
     /**
      * Continue to upload
