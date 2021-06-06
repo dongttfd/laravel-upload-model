@@ -2,6 +2,7 @@
 
 namespace DongttFd\LaravelUploadModel\Test;
 
+use DongttFd\LaravelUploadModel\Test\Models\FileLocalModel;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
@@ -33,7 +34,7 @@ class TestCase extends Orchestra
      */
     public function makeModel()
     {
-        $model = $this->app->make($this->modelName);
+        $model = $this->app->make($this->modelName ?? FileLocalModel::class);
 
         if (!$model instanceof Model) {
             throw new Exception("Class {$this->modelName} must be an instance of Illuminate\\Database\\Eloquent\\Model");
@@ -55,6 +56,8 @@ class TestCase extends Orchestra
             ->create('files', function (Blueprint $table) {
                 $table->increments('id');
                 $table->string('path')->nullable();
+                $table->string('path_url')->nullable();
+                $table->string('avatar')->nullable();
             });
     }
 
@@ -68,20 +71,20 @@ class TestCase extends Orchestra
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite', [
             'driver' => 'sqlite',
-            'database' => ':memory:'
+            'database' => ':memory:',
         ]);
 
         $app['config']->set('filesystems.default', 'public');
         $app['config']->set('filesystems.disks', [
             'local' => [
                 'driver' => 'local',
-                'root' => storage_path('app')
+                'root' => storage_path('app'),
             ],
             'public' => [
                 'driver' => 'local',
                 'root' => storage_path('app/public'),
                 'url' => 'http://localhost/storage',
-                'visibility' => 'public'
+                'visibility' => 'public',
             ],
             's3' => [
                 'driver' => 's3',
@@ -91,13 +94,7 @@ class TestCase extends Orchestra
                 'bucket' => 'AWS_BUCKET',
                 'url' => 'AWS_URL',
                 'endpoint' => 'AWS_ENDPOINT',
-                // 'key' => env('AWS_ACCESS_KEY_ID'),
-                // 'secret' => env('AWS_SECRET_ACCESS_KEY'),
-                // 'region' => env('AWS_DEFAULT_REGION'),
-                // 'bucket' => env('AWS_BUCKET'),
-                // 'url' => env('AWS_URL'),
-                // 'endpoint' => env('AWS_ENDPOINT')
-            ]
+            ],
         ]);
     }
 
@@ -105,5 +102,32 @@ class TestCase extends Orchestra
     public function testInit()
     {
         $this->assertTrue(true, 'Init Testing');
+    }
+
+    /**
+     * Check Array 1D contain
+     *
+     * @param array $expectedArray
+     * @param array $inputArray
+     * @return void
+     */
+    protected function assertArrayContains1D(array $expectedArray, array $output)
+    {
+        $this->assertTrue($this->arrayIsContains($expectedArray, $output), 'Array Not Contains');
+    }
+
+    private function arrayIsContains(array $expectedArray, array $output)
+    {
+        foreach ($expectedArray as $key => $value) {
+            if (($output[$key] ?? null) != $value) {
+                return false;
+            }
+
+            if (is_array($value) && !$this->arrayIsContains($value, $output[$key])) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

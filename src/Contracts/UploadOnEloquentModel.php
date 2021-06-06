@@ -13,18 +13,6 @@ interface UploadOnEloquentModel
     public function loadStorageConfig(): void;
 
     /**
-     * To save file if change
-     *
-     * @param string $field
-     * @param mix $file
-     * @return string | null
-     *
-     * @throws Exception
-     * @throws FileNotFoundException
-     */
-    public function saveFilePath($field, $file);
-
-    /**
      * Continue to upload
      *
      * @param Illuminate\Http\UploadedFile $file
@@ -61,7 +49,29 @@ interface UploadOnEloquentModel
     /**
      * Get path of file from database
      *
+     * @throws DongttFd\LaravelUploadModel\Exceptions\UploadEloquentException
      * @return array
      */
     public function getFileFields(): array;
+
+    /**
+     * Check and save file to disk return value to save columns
+     *
+     * @param string $field
+     * @param mixed $value
+     * @return mixed
+     */
+    public function saveFileField($field, $value);
+
+    /**
+     * To save file if change
+     *
+     * @param string $field
+     * @param mix $file
+     * @return string | null
+     *
+     * @throws Exception
+     * @throws FileNotFoundException
+     */
+    public function saveFilePath($field, $file);
 }

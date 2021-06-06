@@ -16,7 +16,23 @@ if (!function_exists('toPasscalCase')) {
      */
     function toPasscalCase(string $str)
     {
-        return Str::ucfirst(Str::camel($str));
+        return Str::ucfirst(
+            Str::camel(preg_replace('/[^!(a-zA-Z0-9_)]/', '_', $str))
+        );
+    }
+}
+
+if (!function_exists('hasPrefix')) {
+    /**
+     * Check str has prefix
+     *
+     * @param string $str
+     * @param string $needle
+     * @return bool
+     */
+    function hasPrefix(string $str, string $needle)
+    {
+        return substr($str, 0, strlen($needle)) === $needle;
     }
 }
 

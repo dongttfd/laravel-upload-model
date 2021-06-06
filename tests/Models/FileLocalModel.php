@@ -9,18 +9,38 @@ class FileLocalModel extends FileModel
     public $timestamps = false;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var string[]
-     */
-    protected $fillable = ['path'];
-
-    /**
      * The table associated with the model.
      *
      * @var string
      */
     protected $table = 'files';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var string[]
+     */
+    protected $fillable = [
+        'path',
+        'avatar',
+    ];
+
+    /**
+     * Save path to column name
+     *
+     * @var array
+     */
+    protected $fileFields = [
+        'path',
+        'avatar',
+    ];
+
+    /**
+     * Save path file to folder
+     *
+     * @var string
+     */
+    protected $fileFolders = ['path' => 'files'];
 
     /**
      * Default save on disk (from keys of app/config/filesystem.php > disks)
@@ -34,13 +54,8 @@ class FileLocalModel extends FileModel
      *
      * @return void
      */
-    public function setSaveOnDiskNull()
+    public function configSaveOnDiskNull()
     {
         $this->saveOnDisk = null;
-    }
-
-    public function customPathFileName($fileName)
-    {
-        return null;
     }
 }

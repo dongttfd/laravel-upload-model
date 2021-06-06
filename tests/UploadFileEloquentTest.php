@@ -2,17 +2,15 @@
 
 namespace DongttFd\LaravelUploadModel\Test;
 
-use Mockery\MockInterface;
-use Mockery;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Arr;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
-use Exception;
-use DongttFd\LaravelUploadModel\Test\Models\FileS3Model;
-use DongttFd\LaravelUploadModel\Test\Models\FilePublicModel;
+use DongttFd\LaravelUploadModel\Exceptions\UploadEloquentException;
 use DongttFd\LaravelUploadModel\Test\Models\FileLocalModel;
+use DongttFd\LaravelUploadModel\Test\Models\FilePublicModel;
+use DongttFd\LaravelUploadModel\Test\Models\FileS3Model;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Mockery;
+use Mockery\MockInterface;
 
 class UploadFileEloquentTest extends TestCase
 {
@@ -26,7 +24,7 @@ class UploadFileEloquentTest extends TestCase
     public function testDefaultLocalDisk()
     {
         $this->fileModelInstance = new FileLocalModel();
-        $this->fileModelInstance->setSaveOnDiskNull();
+        $this->fileModelInstance->configSaveOnDiskNull();
 
         $storage = Storage::fake('local');
         Storage::shouldReceive('disk')->andReturn($storage);
@@ -41,7 +39,7 @@ class UploadFileEloquentTest extends TestCase
     public function testDefaultS3Disk()
     {
         $this->fileModelInstance = new FileLocalModel();
-        $this->fileModelInstance->setSaveOnDiskNull();
+        $this->fileModelInstance->configSaveOnDiskNull();
         config('filesystems.default', null);
         $storage = Storage::fake('s3');
         Storage::shouldReceive('disk')->andReturn($storage);
@@ -131,8 +129,8 @@ class UploadFileEloquentTest extends TestCase
         $this->modelName = FileLocalModel::class;
         $this->makeModel();
         $this->fileModelInstance = new FileLocalModel;
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('File path must is string or is instance of Illuminate\Http\UploadedFile');
+        $this->expectException(UploadEloquentException::class);
+        $this->expectExceptionMessage(FileLocalModel::class . '::path must is string or is instance of Illuminate\Http\UploadedFile');
         $this->fileModelInstance->fill(['path' => 123])->save();
     }
 
@@ -142,10 +140,9 @@ class UploadFileEloquentTest extends TestCase
         $this->modelName = FileLocalModel::class;
         $this->makeModel();
         $this->fileModelInstance = new FileLocalModel;
-        $this->expectException(FileNotFoundException::class);
-        $this->expectExceptionMessage('File path have must existed on your disk');
+        $this->expectException(UploadEloquentException::class);
+        $this->expectExceptionMessage(FileLocalModel::class . '::path have must existed on your disk');
         $this->fileModelInstance->fill(['path' => 'files/' . Str::random(12) . '.png'])->save();
-        // Arr::set($array, 'products.desk.price', 200);
     }
 
     /** @test */
@@ -220,13 +217,13 @@ class UploadFileEloquentTest extends TestCase
             $this->fileModelInstance->path_url == '/storage/files/' . $file->hashName()
         );
 
-        $this->assertEquals(
-            $this->fileModelInstance->toArray(),
+        $this->assertArrayContains1D(
             [
                 'id' => 1,
-                'path' => $this->fileModelInstance->path,
-                'path_url' => $this->fileModelInstance->path_url,
-            ]
+                'path' => 'files/' . $file->hashName(),
+                'path_url' => '/storage/files/' . $file->hashName(),
+            ],
+            $this->fileModelInstance->toArray()
         );
     }
 
@@ -258,6 +255,30 @@ class UploadFileEloquentTest extends TestCase
         $this->assertTrue($fileModelInstance instanceof FileLocalModel);
         $this->assertNull($fileModelInstance->path);
         $this->assertNull($fileModelInstance->path_url);
+    }
+
+    /** @test */
+    public function testMultipleFileField()
+    {
+        $this->modelName = FileLocalModel::class;
+        $this->makeModel();
+
+        $file = UploadedFile::fake()->image(Str::random(10) . '.png');
+        $avatar = UploadedFile::fake()->image(Str::random(10) . '.png');
+        $this->fileModelInstance = $this->model->create([
+            'path' => $file,
+            'avatar' => $avatar,
+        ]);
+
+        $this->assertTrue(Storage::disk('local')->exists('/files/' . $file->hashName()));
+        $this->assertTrue(
+            $this->fileModelInstance->path_url == '/storage/files/' . $file->hashName()
+        );
+
+        $this->assertTrue(Storage::disk('local')->exists($avatar->hashName()));
+        $this->assertTrue(
+            $this->fileModelInstance->avatar_url == '/storage/' . $avatar->hashName()
+        );
     }
 
     /**

@@ -2,13 +2,16 @@
 
 namespace DongttFd\LaravelUploadModel\Eloquent;
 
-use Exception;
+use DongttFd\LaravelUploadModel\Exceptions\UploadEloquentException;
+use Illuminate\Contracts\Filesystem\FileExistsException;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 trait UploadFileEloquent
 {
+    use FilesystemEloquent, UploadFileJsonEloquent;
+
     /**
      * Default save on disk (from keys of app/config/filesystem.php > disks)
      *
@@ -17,18 +20,22 @@ trait UploadFileEloquent
     protected $saveOnDisk = null;
 
     /**
-     * Save path file to folder
-     *
-     * @var string
-     */
-    protected $fileFolders = ['path' => 'files'];
-
-    /**
-     * Save path to column name
+     * Save path to columns name
+     * Eg: [
+     *    'path', // column name
+     *    'path.*', // column name with json
+     * ]
      *
      * @var array
      */
-    protected $fileFields = ['path'];
+    protected $fileFields = [];
+
+    /**
+     * Save path file to folder, format: ['<file-field>' => 'folder-name']
+     *
+     * @var array
+     */
+    protected $fileFolders = [];
 
     /**
      * Only s3 amazon: save with publish file
@@ -83,54 +90,57 @@ trait UploadFileEloquent
     }
 
     /**
-     * Load configurations
+     * Check and save file to disk return value to save columns
      *
+     * @param string $field
+     * @param mixed $value
+     * @return mixed
      */
-    public function loadStorageConfig(): void
+    public function saveFileField($field, $value)
     {
-        if (!$this->saveOnDisk) {
-            $this->saveOnDisk = config('filesystems.default') ?? 's3';
+        $fileFields = $this->getFileFields($field);
+
+        if (!$this->isJsonFileField($fileFields)) {
+            if ($oldPath = parent::getAttribute($field)) {
+                $this->filePathOnTrash[] = $oldPath;
+            }
+
+            unset($this->attributes[$field . '_url']);
+
+            return $this->saveFilePath($field, $value);
         }
 
-        // if (method_exists($this, 'saveDiskName')) {
-        //     $this->saveDiskName();
-        // }
-        $this->storageDisk = Storage::disk($this->saveOnDisk);
+        return $this->saveFilePathToArray($field, $value);
     }
 
     /**
-     * To save file if change
+     * Check all file fields is of json field or not
+     *
+     * @param array $fileFields
+     * @return boolean
+     */
+    private function isJsonFileField($fileFields)
+    {
+        return sizeof($fileFields) !== 1 || Str::contains($fileFields[0], ['.', '*']);
+    }
+
+    /**
+     * Save file path if change and return path
      *
      * @param string $field
      * @param mixed $file
      * @return string | null
      *
-     * @throws Exception
+     * @throws FileExistsException
      * @throws FileNotFoundException
      */
     public function saveFilePath($field, $file)
     {
-        if (!$file) {
-            return null;
-        }
+        $file = $this->prepareFile($field, $file);
 
-        if (!($file instanceof UploadedFile) && !is_string($file)) {
-            throw new Exception('File path must is string or is instance of ' . UploadedFile::class);
-        }
-
-        if (is_string($file)) {
-            if (!$this->exists($file)) {
-                throw new FileNotFoundException('File path have must existed on your disk');
-            }
-
+        if (!($file instanceof UploadedFile)) {
             return $file;
         }
-
-        if ($oldPath = parent::getAttribute($field)) {
-            $this->filePathOnTrash[] = $oldPath;
-        }
-
-        unset($this->attributes[$field . '_url']);
 
         return $this->upload(
             $file,
@@ -140,19 +150,45 @@ trait UploadFileEloquent
     }
 
     /**
+     * Prepare file before upload
+     *
+     * @param string $field
+     * @param mixed $file
+     * @return string | UploadedFile | null
+     *
+     * @throws UploadEloquentException
+     */
+    private function prepareFile($field, $file)
+    {
+        if (!$file) {
+            return null;
+        }
+
+        if (!($file instanceof UploadedFile) && !is_string($file)) {
+            throw new UploadEloquentException(get_class($this) . "::{$field} must is string or is instance of " . UploadedFile::class);
+        }
+
+        if (is_string($file) && !$this->exists($file)) {
+            throw new UploadEloquentException(get_class($this) . "::{$field} have must existed on your disk");
+        }
+
+        return $file;
+    }
+
+    /**
      * Get folder of file are going to save field
      *
      * @param string $field
      * @return mixed
+     *
+     * @throws UploadEloquentException
      */
     private function prepareFolder($field)
     {
         $folder = $this->fileFolders[$field] ?? null;
 
-        $customFolderFunction = 'custom' . toPasscalCase($field) . 'Folder';
-
-        if (method_exists($this, $customFolderFunction)) {
-            $folder = $this->{$customFolderFunction}($folder);
+        if ($folder && !is_string($folder)) {
+            throw new UploadEloquentException(get_class($this) . "::fileFolders['{$field}'] have must is string");
         }
 
         return $folder;
@@ -167,7 +203,7 @@ trait UploadFileEloquent
      */
     private function prepareFileName($field, $currentFileName = '')
     {
-        $customFileNameFunction = 'custom' . toPasscalCase($field) . 'FileName';
+        $customFileNameFunction = 'prepare' . toPasscalCase($field) . 'FileName';
 
         return method_exists($this, $customFileNameFunction)
             ? $this->{$customFileNameFunction}($currentFileName)
@@ -175,117 +211,30 @@ trait UploadFileEloquent
     }
 
     /**
-     * Continue to upload
+     * Get file field configuration of model
      *
-     * @param Illuminate\Http\UploadedFile $file
-     * @param string $folder
-     * @param mixed $fileName
-     * @return string
-     */
-    public function upload(UploadedFile $file, $folder = '', $fileName = null): string
-    {
-        if (!$this->storageDisk) {
-            $this->loadStorageConfig();
-        }
-
-        return $fileName
-            ? $this->storageDisk->putFileAs(
-            $folder,
-            $file,
-            $fileName,
-            $this->filePublish ? 'public' : null
-        )
-            : $this->storageDisk->put(
-            $folder,
-            $file,
-            $this->filePublish ? 'public' : null
-        );
-    }
-
-    /**
-     * Delete file on storage disk
-     *
-     * @param string $path
-     * @return mixed
-     */
-    public function deleteFile($path)
-    {
-        return $this->exists($path)
-            ? $this->storageDisk->delete($path)
-            : null;
-    }
-
-    /**
-     * Retrieve the contents of a file
-     *
-     * @param string $path
-     * @return string | null
-     */
-    public function retrieving($path)
-    {
-        if (!$this->exists($path)) {
-            return null;
-        }
-
-        return $this->storageDisk->get($path);
-    }
-
-    /**
-     * Get full url file
-     *
-     * @param string $path
-     * @return string | null
-     */
-    public function getUrl($path)
-    {
-        if (!$this->exists($path)) {
-            return null;
-        }
-
-        if ($this->saveOnDisk === 's3' && !$this->filePublish) {
-            return $this->retrievingTemporaryUrlS3($path);
-        }
-
-        return $this->storageDisk->url($path);
-    }
-
-    /**
-     * Check file existed on storage disk
-     *
-     * @param string $path
-     * @return bool
-     */
-    private function exists($path): bool
-    {
-        if (!$this->storageDisk) {
-            $this->loadStorageConfig();
-        }
-
-        return $this->storageDisk->exists($path);
-    }
-
-    /**
-     * Get temporay url from s3 of private file
-     *
-     * @param string $path
-     * @return string
-     */
-    private function retrievingTemporaryUrlS3($path)
-    {
-        return $this->storageDisk->temporaryUrl(
-            $path,
-            now()->addMinutes($this->fileExpireIn)
-        );
-    }
-
-    /**
-     * Get path of file from database
-     *
+     * @param string | null $field
      * @return array
      */
-    public function getFileFields(): array
+    public function getFileFields($field = null): array
     {
-        return $this->fileFields ?? ['path'];
+        $fileFields = $this->fileFields ?? [];
+        if (!$field) {
+            return $fileFields;
+        }
+
+        return array_values(array_filter(
+            $fileFields,
+            function ($fileField) use ($field) {
+                if (!is_string($fileField) || $fileField === '') {
+                    throw new UploadEloquentException(
+                        'Element in ' . get_class($this) . '::$fileFields must is String'
+                    );
+                }
+
+                return hasPrefix($fileField, $field);
+            })
+        );
     }
 
     /**
@@ -298,7 +247,13 @@ trait UploadFileEloquent
     {
         if ($isDeletedAction) {
             foreach ($this->getFileFields() as $field) {
-                $this->filePathOnTrash[] = $this->getOriginal($field);
+                $columName = explode('.', $field)[0];
+                if (!$this->isJsonFileField($this->getFileFields($columName))) {
+                    $this->filePathOnTrash[] = $this->getOriginal($field);
+                    break;
+                }
+
+                $this->prepareFileOnJsonToDelete($columName);
             }
         }
 
@@ -320,20 +275,43 @@ trait UploadFileEloquent
     public function getAttribute($field)
     {
         if (hasSubfix($field, '_url')
+            && !Str::contains($field, ['.', '*'])
             && $this->isFileField($fieldName = str_replace('_url', '', $field))
         ) {
             $value = parent::getAttribute($fieldName);
 
-            return $this->attributes[$field] = $value ? $this->getUrl($value) : null;
+            $this->assignFileFieldUrl($fieldName, $value);
+
+            return $this->attributes[$field];
         }
 
         $value = parent::getAttribute($field);
 
         if ($this->isFileField($field)) {
-            $this->attributes[$field . '_url'] = $value ? $this->getUrl($value) : null;
+            $value = $this->assignFileFieldUrl($field, $value);
         }
 
         return $value;
+    }
+
+    /**
+     * Swich file fields of field and assign url to that
+     *
+     * @param string $field
+     * @param mixed $value
+     * @return mixed
+     */
+    private function assignFileFieldUrl($field, $value)
+    {
+        $fileFields = $this->getFileFields($field);
+
+        if (!$this->isJsonFileField($fileFields) && !is_array($value)) {
+            $this->attributes[$field . '_url'] = $value ? $this->getUrl($value) : null;
+
+            return $value;
+        }
+
+        return $this->assignFileFieldUrlToArray($field, $value);
     }
 
     /**
@@ -344,7 +322,7 @@ trait UploadFileEloquent
      */
     private function isFileField($field)
     {
-        return in_array($field, $this->getFileFields());
+        return !empty($this->getFileFields($field));
     }
 
     /**
@@ -356,21 +334,26 @@ trait UploadFileEloquent
      */
     public function setAttribute($key, $value)
     {
-        if (in_array($key, $this->getFileFields())) {
-            $value = $this->saveFilePath($key, $value);
+        if ($this->isfileField($key)) {
+            $value = $this->saveFileField($key, $value);
         }
 
         return parent::setAttribute($key, $value);
     }
 
     /**
-     * Overide toArray
+     * Overide toArray: refresh model, get file fields and conver to Array
      *
      * @return array
      */
     public function toArray()
     {
-        $fileFields = $this->getFileFields();
+        $fileFields = array_unique(array_map(
+            function ($field) {
+                return explode('.', $field)[0];
+            },
+            $this->getFileFields()
+        ));
 
         foreach ($fileFields as $field) {
             $this->{$field};

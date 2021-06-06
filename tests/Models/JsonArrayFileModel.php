@@ -4,7 +4,7 @@ namespace DongttFd\LaravelUploadModel\Test\Models;
 
 use DongttFd\LaravelUploadModel\Eloquent\FileModel;
 
-class FilePublicModel extends FileModel
+class JsonArrayFileModel extends FileModel
 {
     public $timestamps = false;
 
@@ -23,6 +23,15 @@ class FilePublicModel extends FileModel
     protected $fillable = ['path'];
 
     /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'path' => 'array',
+    ];
+
+    /**
      * Default save on disk (from keys of app/config/filesystem.php > disks)
      *
      * @var string
@@ -30,19 +39,17 @@ class FilePublicModel extends FileModel
     protected $saveOnDisk = 'public';
 
     /**
-     * Save path to column name
-     *
-     * @var array
-     */
-    protected $fileFields = [
-        'path',
-    ];
-
-    /**
      * Save path file to folder
      *
      * @var string
      */
     protected $fileFolders = ['path' => 'files'];
+
+    /**
+     * Save path to column name
+     *
+     * @var array
+     */
+    protected $fileFields = ['path.*'];
 
 }
