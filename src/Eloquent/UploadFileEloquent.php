@@ -101,7 +101,8 @@ trait UploadFileEloquent
         $fileFields = $this->getFileFields($field);
 
         if (!$this->isJsonFileField($fileFields)) {
-            if ($oldPath = parent::getAttribute($field)) {
+            $oldPath  = parent::getAttribute($field);
+            if ($oldPath && $oldPath !== $value) {
                 $this->filePathOnTrash[] = $oldPath;
             }
 

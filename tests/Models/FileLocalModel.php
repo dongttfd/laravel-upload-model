@@ -21,6 +21,7 @@ class FileLocalModel extends FileModel
      * @var string[]
      */
     protected $fillable = [
+        'name',
         'path',
         'avatar',
     ];

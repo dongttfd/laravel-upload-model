@@ -19,10 +19,8 @@ trait UploadFileJsonEloquent
 
         foreach ($fieldsMapped as $mapped) {
             $keyOfFile = $mapped['keyOfFile'];
-            Arr::forget(
-                $this->attributes,
-                $this->prepareFileFieldUrl($field . '.' . $keyOfFile)
-            );
+
+            $this->forgetField($field, $keyOfFile);
 
             $newPath = $this->saveFilePath(
                 $mapped['fileField'],
@@ -39,6 +37,27 @@ trait UploadFileJsonEloquent
         }
 
         return $value;
+    }
+
+    /**
+     * Forget field hase subfix `url`
+     *
+     * @param string $field
+     * @param string $keyOfFile
+     * @return void
+     */
+    private function forgetField($field, $keyOfFile)
+    {
+        if (intval($keyOfFile) == $keyOfFile && strpos($field, '.') === false) {
+            unset($this->attributes[$field . '_url']);
+
+            return;
+        }
+
+        Arr::forget(
+            $this->attributes,
+            $this->prepareFileFieldUrl($field . '.' . $keyOfFile)
+        );
     }
 
     /**

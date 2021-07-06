@@ -55,8 +55,8 @@ class TestCase extends Orchestra
             ->getSchemaBuilder()
             ->create('files', function (Blueprint $table) {
                 $table->increments('id');
+                $table->string('name')->nullable();
                 $table->string('path')->nullable();
-                $table->string('path_url')->nullable();
                 $table->string('avatar')->nullable();
             });
     }

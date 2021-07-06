@@ -106,6 +106,24 @@ class UploadFileEloquentTest extends TestCase
     }
 
     /** @test */
+    public function testUpdateFileObject()
+    {
+        $this->modelName = FileLocalModel::class;
+        $this->makeModel();
+        $this->fileModelInstance = new FileLocalModel;
+
+        $fileUpdate = UploadedFile::fake()->image(Str::random(20) . '.jpg');
+        $this->fileModelInstance->fill(['path' => $fileUpdate])->save();
+
+        $this->fileModelInstance->update([
+            'name' => 'bcsok',
+            'path' => $this->fileModelInstance->path,
+        ]);
+
+        $this->assertTrue(Storage::disk('local')->exists('/files/' . $fileUpdate->hashName()));
+    }
+
+    /** @test */
     public function testUpdateAndDeleteOldFile()
     {
         $this->modelName = FileLocalModel::class;

@@ -9,3 +9,7 @@
 # 0.2.0 - 2021-06-07
 ## New Feature
 - Upload file with JSON columns
+
+# 0.2.1 - 2021-07-06
+## Fix bug
+- Fix bug file have been deleted when updated other field
