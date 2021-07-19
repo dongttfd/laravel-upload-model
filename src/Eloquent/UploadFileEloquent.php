@@ -52,6 +52,13 @@ trait UploadFileEloquent
     protected $fileExpireIn = 5;
 
     /**
+     * Use current date on folder path
+     *
+     * @var bool
+     */
+    protected $usedDateOnPath = true;
+
+    /**
      * System storage disk
      *
      * @var Illuminate\Filesystem\FilesystemAdapter | null
@@ -192,7 +199,19 @@ trait UploadFileEloquent
             throw new UploadEloquentException(get_class($this) . "::fileFolders['{$field}'] have must is string");
         }
 
-        return $folder;
+        return $folder . $this->setDateOnPath();
+    }
+
+    /**
+     * Set date on path of folder
+     *
+     * @return string
+     */
+    private function setDateOnPath()
+    {
+        return $this->usedDateOnPath
+            ? '/' . date('Y/m/d')
+            : '';
     }
 
     /**

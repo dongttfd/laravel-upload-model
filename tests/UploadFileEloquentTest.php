@@ -55,9 +55,9 @@ class UploadFileEloquentTest extends TestCase
     {
         $file = $this->fakeFileModelInstance();
         $this->assertTrue($this->fileModelInstance instanceof FilePublicModel);
-        $this->assertTrue(Storage::disk('public')->exists('files/' . $file->hashName()));
+        $this->assertTrue(Storage::disk('public')->exists('files/' . $this->setCurrentDateFolder($file->hashName())));
         $this->assertTrue(
-            $this->fileModelInstance->path_url == config('filesystems.disks.public.url') . '/files/' . $file->hashName()
+            $this->fileModelInstance->path_url == config('filesystems.disks.public.url') . '/files/' . $this->setCurrentDateFolder($file->hashName())
         );
     }
 
@@ -68,9 +68,9 @@ class UploadFileEloquentTest extends TestCase
         $this->makeModel();
         $file = $this->fakeFileModelInstance();
         $this->assertTrue($this->fileModelInstance instanceof FileLocalModel);
-        $this->assertTrue(Storage::disk('local')->exists('/files/' . $file->hashName()));
+        $this->assertTrue(Storage::disk('local')->exists('/files/' . $this->setCurrentDateFolder($file->hashName())));
         $this->assertTrue(
-            $this->fileModelInstance->path_url == '/storage/files/' . $file->hashName()
+            $this->fileModelInstance->path_url == '/storage/files/' . $this->setCurrentDateFolder($file->hashName())
         );
     }
 
@@ -87,7 +87,7 @@ class UploadFileEloquentTest extends TestCase
         $file = $this->fakeFileModelInstance();
 
         $this->assertTrue($this->fileModelInstance instanceof FileS3Model);
-        $this->assertTrue(Storage::disk('s3')->exists('/files/' . $file->hashName()));
+        $this->assertTrue(Storage::disk('s3')->exists('/files/' . $this->setCurrentDateFolder($file->hashName())));
         $this->assertTrue(
             $this->fileModelInstance->path_url == 's3-service-url'
         );
@@ -102,7 +102,7 @@ class UploadFileEloquentTest extends TestCase
 
         $fileUpdate = UploadedFile::fake()->image(Str::random(20) . '.jpg');
         $this->fileModelInstance->fill(['path' => $fileUpdate])->save();
-        $this->assertTrue(Storage::disk('local')->exists('/files/' . $fileUpdate->hashName()));
+        $this->assertTrue(Storage::disk('local')->exists('/files/' . $this->setCurrentDateFolder($fileUpdate->hashName())));
     }
 
     /** @test */
@@ -120,7 +120,7 @@ class UploadFileEloquentTest extends TestCase
             'path' => $this->fileModelInstance->path,
         ]);
 
-        $this->assertTrue(Storage::disk('local')->exists('/files/' . $fileUpdate->hashName()));
+        $this->assertTrue(Storage::disk('local')->exists('/files/' . $this->setCurrentDateFolder($fileUpdate->hashName())));
     }
 
     /** @test */
@@ -129,7 +129,7 @@ class UploadFileEloquentTest extends TestCase
         $this->modelName = FileLocalModel::class;
         $this->makeModel();
         $file = $this->fakeFileModelInstance();
-        $filePath = '/files/' . $file->hashName();
+        $filePath = '/files/' . $this->setCurrentDateFolder($file->hashName());
 
         $this->assertTrue($this->fileModelInstance instanceof FileLocalModel);
         $this->assertTrue(Storage::disk('local')->exists($filePath));
@@ -138,7 +138,7 @@ class UploadFileEloquentTest extends TestCase
         $this->fileModelInstance->update(['path' => $fileUpdate]);
 
         $this->assertNotTrue(Storage::disk('local')->exists($filePath));
-        $this->assertTrue(Storage::disk('local')->exists('/files/' . $fileUpdate->hashName()));
+        $this->assertTrue(Storage::disk('local')->exists('/files/' . $this->setCurrentDateFolder($fileUpdate->hashName())));
     }
 
     /** @test */
@@ -186,7 +186,7 @@ class UploadFileEloquentTest extends TestCase
         $this->modelName = FileLocalModel::class;
         $this->makeModel();
         $file = $this->fakeFileModelInstance();
-        $filePath = '/files/' . $file->hashName();
+        $filePath = '/files/' . $this->setCurrentDateFolder($file->hashName());
 
         $this->assertTrue($this->fileModelInstance instanceof FileLocalModel);
         $this->assertTrue(Storage::disk('local')->exists($filePath));
@@ -202,7 +202,7 @@ class UploadFileEloquentTest extends TestCase
         $this->makeModel();
 
         $file = $this->fakeFileModelInstance();
-        $filePath = '/files/' . $file->hashName();
+        $filePath = '/files/' . $this->setCurrentDateFolder($file->hashName());
 
         $this->assertTrue(
             $this->fileModelInstance->retrieving($filePath) == $file->getContent()
@@ -216,7 +216,7 @@ class UploadFileEloquentTest extends TestCase
         $this->makeModel();
 
         $file = $this->fakeFileModelInstance();
-        $filePath = '/files/' . $file->hashName();
+        $filePath = '/files/' . $this->setCurrentDateFolder($file->hashName());
         Storage::disk('local')->delete($filePath);
 
         $this->assertTrue(
@@ -232,14 +232,14 @@ class UploadFileEloquentTest extends TestCase
 
         $file = $this->fakeFileModelInstance();
         $this->assertTrue(
-            $this->fileModelInstance->path_url == '/storage/files/' . $file->hashName()
+            $this->fileModelInstance->path_url == '/storage/files/' . $this->setCurrentDateFolder($file->hashName())
         );
 
         $this->assertArrayContains1D(
             [
                 'id' => 1,
-                'path' => 'files/' . $file->hashName(),
-                'path_url' => '/storage/files/' . $file->hashName(),
+                'path' => 'files/' . $this->setCurrentDateFolder($file->hashName()),
+                'path_url' => '/storage/files/' . $this->setCurrentDateFolder($file->hashName()),
             ],
             $this->fileModelInstance->toArray()
         );
@@ -253,14 +253,14 @@ class UploadFileEloquentTest extends TestCase
 
         $file = $this->fakeFileModelInstance();
         $this->assertTrue($this->fileModelInstance instanceof FileLocalModel);
-        $this->assertTrue(Storage::disk('local')->exists('/files/' . $file->hashName()));
+        $this->assertTrue(Storage::disk('local')->exists('/files/' . $this->setCurrentDateFolder($file->hashName())));
 
         $this->assertTrue(
-            $this->fileModelInstance->path_url == '/storage/files/' . $file->hashName()
+            $this->fileModelInstance->path_url == '/storage/files/' . $this->setCurrentDateFolder($file->hashName())
         );
 
         $this->fileModelInstance->delete();
-        $this->assertFalse(Storage::disk('local')->exists('/files/' . $file->hashName()));
+        $this->assertFalse(Storage::disk('local')->exists('/files/' . $this->setCurrentDateFolder($file->hashName())));
     }
 
     /** @test */
@@ -288,14 +288,14 @@ class UploadFileEloquentTest extends TestCase
             'avatar' => $avatar,
         ]);
 
-        $this->assertTrue(Storage::disk('local')->exists('/files/' . $file->hashName()));
+        $this->assertTrue(Storage::disk('local')->exists('/files/' . $this->setCurrentDateFolder($file->hashName())));
         $this->assertTrue(
-            $this->fileModelInstance->path_url == '/storage/files/' . $file->hashName()
+            $this->fileModelInstance->path_url == '/storage/files/' . $this->setCurrentDateFolder($file->hashName())
         );
 
-        $this->assertTrue(Storage::disk('local')->exists($avatar->hashName()));
+        $this->assertTrue(Storage::disk('local')->exists($this->setCurrentDateFolder($avatar->hashName())));
         $this->assertTrue(
-            $this->fileModelInstance->avatar_url == '/storage/' . $avatar->hashName()
+            $this->fileModelInstance->avatar_url == '/storage/' . $this->setCurrentDateFolder($avatar->hashName())
         );
     }
 
