@@ -130,4 +130,15 @@ class TestCase extends Orchestra
 
         return true;
     }
+
+    /**
+     * Set current date on folder file name
+     *
+     * @param string $filename
+     * @return string
+     */
+    protected function setCurrentDateFolder($filename)
+    {
+        return date('Y/m/d') . '/' . $filename;
+    }
 }

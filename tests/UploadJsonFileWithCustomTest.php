@@ -46,14 +46,14 @@ class UploadJsonFileWithCustomTest extends TestCase
 
         $this->assertArrayContains1D([
             'other' => 'bcsok',
-            'first' => 'first/' . 'bcsok' . $file->name,
-            'second' => 'second/' . $file2->hashName(),
-            'first_url' => config('filesystems.disks.public.url') . '/first/' . 'bcsok' . $file->name,
-            'second_url' => config('filesystems.disks.public.url') . '/second/' . $file2->hashName(),
+            'first' => 'first/' . $this->setCurrentDateFolder('bcsok' . $file->name),
+            'second' => 'second/' . $this->setCurrentDateFolder($file2->hashName()),
+            'first_url' => config('filesystems.disks.public.url') . '/first/' . $this->setCurrentDateFolder('bcsok' . $file->name),
+            'second_url' => config('filesystems.disks.public.url') . '/second/' . $this->setCurrentDateFolder($file2->hashName()),
         ], $fileModelInstance->path);
 
         $fileModelInstance->delete();
-        $this->assertTrue(Storage::disk('public')->exists('first/' . 'bcsok' . $file->name));
-        $this->assertTrue(Storage::disk('public')->exists('second/' . $file2->hashName()));
+        $this->assertTrue(Storage::disk('public')->exists('first/' . $this->setCurrentDateFolder('bcsok' . $file->name)));
+        $this->assertTrue(Storage::disk('public')->exists('second/' . $this->setCurrentDateFolder($file2->hashName())));
     }
 }

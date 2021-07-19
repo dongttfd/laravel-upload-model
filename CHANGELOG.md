@@ -13,3 +13,7 @@
 # 0.2.1 - 2021-07-06
 ## Fix bug
 - Fix bug file have been deleted when updated other field
+
+# 0.2.2 - 2021-07-19
+## Update
+- Update: create folder with current date

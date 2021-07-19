@@ -35,15 +35,15 @@ class UploadJsonArrayFileTest extends TestCase
                 ])
                 ->save();
 
-            $this->assertNotTrue(Storage::disk('public')->exists($file2->hashName()));
+            $this->assertNotTrue(Storage::disk('public')->exists($this->setCurrentDateFolder($file2->hashName())));
             $this->assertArrayContains1D([
-                $file->hashName(),
-                $file3->hashName(),
+                $this->setCurrentDateFolder($file->hashName()),
+                $this->setCurrentDateFolder($file3->hashName()),
             ], $fileModelInstance->path);
 
             $this->assertArrayContains1D([
-                config('filesystems.disks.public.url') . '/' . $file->hashName(),
-                config('filesystems.disks.public.url') . '/' . $file3->hashName(),
+                config('filesystems.disks.public.url') . '/' . $this->setCurrentDateFolder($file->hashName()),
+                config('filesystems.disks.public.url') . '/' . $this->setCurrentDateFolder($file3->hashName()),
             ], $fileModelInstance->path_url);
         });
     }
@@ -53,8 +53,8 @@ class UploadJsonArrayFileTest extends TestCase
     {
         $this->createFileModel(function ($fileModelInstance, $file, $file2) {
             $fileModelInstance->delete();
-            $this->assertNotTrue(Storage::disk('public')->exists($file->hashName()));
-            $this->assertNotTrue(Storage::disk('public')->exists($file2->hashName()));
+            $this->assertNotTrue(Storage::disk('public')->exists($this->setCurrentDateFolder($file->hashName())));
+            $this->assertNotTrue(Storage::disk('public')->exists($this->setCurrentDateFolder($file2->hashName())));
         });
     }
 
@@ -64,12 +64,12 @@ class UploadJsonArrayFileTest extends TestCase
         $this->createFileModel(function ($fileModelInstance, $file, $file2) {
             $this->assertArrayContains1D([
                 'path' => [
-                    $file->hashName(),
-                    $file2->hashName(),
+                    $this->setCurrentDateFolder($file->hashName()),
+                    $this->setCurrentDateFolder($file2->hashName()),
                 ],
                 'path_url' => [
-                    config('filesystems.disks.public.url') . '/' . $file->hashName(),
-                    config('filesystems.disks.public.url') . '/' . $file2->hashName(),
+                    config('filesystems.disks.public.url') . '/' . $this->setCurrentDateFolder($file->hashName()),
+                    config('filesystems.disks.public.url') . '/' . $this->setCurrentDateFolder($file2->hashName()),
                 ],
             ], $fileModelInstance->toArray());
         });
@@ -90,13 +90,13 @@ class UploadJsonArrayFileTest extends TestCase
         ]);
 
         $this->assertArrayContains1D([
-            $file->hashName(),
-            $file2->hashName(),
+            $this->setCurrentDateFolder($file->hashName()),
+            $this->setCurrentDateFolder($file2->hashName()),
         ], $fileModelInstance->path);
 
         $this->assertArrayContains1D([
-            config('filesystems.disks.public.url') . '/' . $file->hashName(),
-            config('filesystems.disks.public.url') . '/' . $file2->hashName(),
+            config('filesystems.disks.public.url') . '/' . $this->setCurrentDateFolder($file->hashName()),
+            config('filesystems.disks.public.url') . '/' . $this->setCurrentDateFolder($file2->hashName()),
         ], $fileModelInstance->path_url);
 
         if ($callback) {
