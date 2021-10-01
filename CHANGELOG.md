@@ -17,3 +17,7 @@
 # 0.2.2 - 2021-07-19
 ## Update
 - Update: create folder with current date
+
+# 0.2.3 - 2021-10-01
+## Update
+- Support: cancel force delete old file when Create, Update, Delete model instance
