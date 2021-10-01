@@ -59,6 +59,13 @@ trait UploadFileEloquent
     protected $usedDateOnPath = true;
 
     /**
+     * Use flag to delete file when create, update, delete object
+     *
+     * @var bool
+     */
+    protected $forceDeleteFile = true;
+
+    /**
      * System storage disk
      *
      * @var Illuminate\Filesystem\FilesystemAdapter | null
@@ -265,6 +272,10 @@ trait UploadFileEloquent
      */
     private function deleteOldFiles($isDeletedAction = false)
     {
+        if (!$this->forceDeleteFile) {
+            return;
+        }
+
         if ($isDeletedAction) {
             foreach ($this->getFileFields() as $field) {
                 $columName = explode('.', $field)[0];

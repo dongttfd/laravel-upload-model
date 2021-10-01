@@ -6,6 +6,7 @@ use DongttFd\LaravelUploadModel\Exceptions\UploadEloquentException;
 use DongttFd\LaravelUploadModel\Test\Models\FileLocalModel;
 use DongttFd\LaravelUploadModel\Test\Models\FilePublicModel;
 use DongttFd\LaravelUploadModel\Test\Models\FileS3Model;
+use DongttFd\LaravelUploadModel\Test\Models\FileSoftDeleteModel;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -121,6 +122,25 @@ class UploadFileEloquentTest extends TestCase
         ]);
 
         $this->assertTrue(Storage::disk('local')->exists('/files/' . $this->setCurrentDateFolder($fileUpdate->hashName())));
+    }
+
+    /** @test */
+    public function testUpdateFileKeepOldFile()
+    {
+        $this->modelName = FileSoftDeleteModel::class;
+        $this->makeModel();
+        $this->fileModelInstance = new FileSoftDeleteModel;
+
+        $originFile = UploadedFile::fake()->image(Str::random(20) . '.jpg');
+        $updateFile = UploadedFile::fake()->image(Str::random(20) . '.jpg');
+        $this->fileModelInstance->fill(['path' => $originFile])->save();
+
+        $this->fileModelInstance->update([
+            'name' => 'bcsok',
+            'path' => $updateFile,
+        ]);
+
+        $this->assertTrue(Storage::disk('local')->exists('/files/' . $this->setCurrentDateFolder($originFile->hashName())));
     }
 
     /** @test */
