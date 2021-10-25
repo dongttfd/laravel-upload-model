@@ -47,6 +47,7 @@ class JsonFileModelCustomFolder extends FileModel
     protected $fileFolders = [
         'path.first' => 'first',
         'path.second' => 'second',
+        'path.images' => 'images',
     ];
 
     /**
@@ -54,7 +55,11 @@ class JsonFileModelCustomFolder extends FileModel
      *
      * @var array
      */
-    protected $fileFields = ['path.first', 'path.second'];
+    protected $fileFields = [
+        'path.first',
+        'path.second',
+        'path.images.*'
+    ];
 
     public function configFileFolders($fileFolders)
     {

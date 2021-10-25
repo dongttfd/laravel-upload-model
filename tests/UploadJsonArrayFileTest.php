@@ -49,6 +49,23 @@ class UploadJsonArrayFileTest extends TestCase
     }
 
     /** @test */
+    public function testUpdateEmptyJsonArrayFileModel()
+    {
+        $this->createFileModel(function ($fileModelInstance, $file, $file2) {
+            $file3 = UploadedFile::fake()->image(Str::random(10) . '.png');
+            $fileModelInstance
+                ->update([
+                    'path' => [],
+                ]);
+
+            $this->assertNotTrue(Storage::disk('public')->exists($this->setCurrentDateFolder($file2->hashName())));
+            $this->assertArrayContains1D([], $fileModelInstance->path);
+
+            $this->assertArrayContains1D([], $fileModelInstance->path_url);
+        });
+    }
+
+    /** @test */
     public function testDeleteJsonArrayFileModel()
     {
         $this->createFileModel(function ($fileModelInstance, $file, $file2) {

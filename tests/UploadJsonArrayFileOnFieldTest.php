@@ -54,6 +54,28 @@ class UploadJsonArrayFileOnFieldTest extends TestCase
     }
 
     /** @test */
+    public function testUpdateEmptyJsonArrayFileOnFieldModel()
+    {
+        $this->createFileModel(function ($fileModelInstance, $file, $file2) {
+            $fileModelInstance
+                ->fill([
+                    'path' => [
+                        'key_test' => 'test',
+                        'images' => [],
+                    ],
+                ])
+                ->save();
+
+            $this->assertNotTrue(
+                Storage::disk('public')->exists($this->setCurrentDateFolder($file2->hashName()))
+            );
+
+            $this->assertEmpty($fileModelInstance->path['images']);
+            $this->assertTrue($fileModelInstance->path['key_test'] == 'test');
+        });
+    }
+
+    /** @test */
     public function testDeleteJsonArrayFileOnFieldModel()
     {
         $this->createFileModel(function ($fileModelInstance, $file, $file2) {
