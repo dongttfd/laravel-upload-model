@@ -41,6 +41,7 @@ class UploadJsonFileWithCustomTest extends TestCase
                 'other' => 'bcsok',
                 'first' => $file,
                 'second' => $file2,
+                'images' => [],
             ],
         ]);
 
@@ -50,6 +51,8 @@ class UploadJsonFileWithCustomTest extends TestCase
             'second' => 'second/' . $this->setCurrentDateFolder($file2->hashName()),
             'first_url' => config('filesystems.disks.public.url') . '/first/' . $this->setCurrentDateFolder('bcsok' . $file->name),
             'second_url' => config('filesystems.disks.public.url') . '/second/' . $this->setCurrentDateFolder($file2->hashName()),
+            'images' => [],
+            'images_url' => [],
         ], $fileModelInstance->path);
 
         $fileModelInstance->delete();

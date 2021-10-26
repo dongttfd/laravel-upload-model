@@ -21,3 +21,7 @@
 # 0.2.3 - 2021-10-01
 ## Update
 - Support: cancel force delete old file when Create, Update, Delete model instance
+
+# 0.2.4 - 2021-10-26
+## Fix bug
+- Fix update, show JSON file field when empty

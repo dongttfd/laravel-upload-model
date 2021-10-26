@@ -36,6 +36,8 @@ trait UploadFileJsonEloquent
             }
         }
 
+        $this->removeFileWhenArrayEmpty($field, $value);
+
         return $value;
     }
 
@@ -56,7 +58,45 @@ trait UploadFileJsonEloquent
 
         Arr::forget(
             $this->attributes,
-            $this->prepareFileFieldUrl($field . '.' . $keyOfFile)
+            $this->prepareFileFieldUrl(
+                $keyOfFile
+                    ? $field . '.' . $keyOfFile
+                    : $field
+            )
+        );
+    }
+
+    /**
+     * Remove url when file save on json array (*)
+     * Prepare file before delete on trash
+     *
+     * @param string $field
+     * @param mixed $value
+     */
+    private function removeFileWhenArrayEmpty($field, &$value)
+    {
+        $fileFields = $this->getFileFields($field);
+        $oldValue = parent::getAttribute($field) ?? [];
+        $oldPaths = [];
+
+        foreach ($fileFields as $fileField) {
+            $fileField = trim(substr($fileField, strlen($field . '.')), '.*');
+            $this->forgetField($field, $fileField);
+
+            if (!$fileField && empty($value)) {
+                $this->forgetField($field, '');
+                $oldPaths = array_merge($oldPaths, $oldValue);
+                continue;
+            }
+
+            if ($fileField && empty(Arr::get($value, $fileField))) {
+                $oldPaths = array_merge($oldPaths, Arr::get($oldValue, $fileField) ?? []);
+            }
+        }
+
+        $this->filePathOnTrash = array_merge(
+            $this->filePathOnTrash,
+            $oldPaths
         );
     }
 
@@ -111,6 +151,8 @@ trait UploadFileJsonEloquent
             }
         }
 
+        $this->addUrlFieldWhenArrayEmpty($field, $value);
+
         $this->attributes[$field] = json_encode($value);
 
         return $value;
@@ -144,7 +186,6 @@ trait UploadFileJsonEloquent
      * Prepare path file to delete
      *
      * @param string $field
-     * @return void
      */
     private function prepareFileOnJsonToDelete($field)
     {
@@ -153,6 +194,30 @@ trait UploadFileJsonEloquent
 
         foreach ($fieldsMapped as $mapped) {
             $this->filePathOnTrash[] = Arr::get($value, $mapped['keyOfFile']);
+        }
+    }
+
+    /**
+     * Assign url field when array file empty (*)
+     *
+     * @param string $field
+     * @param mixed &$value
+     */
+    private function addUrlFieldWhenArrayEmpty($field, &$value)
+    {
+        $fileFields = $this->getFileFields($field);
+
+        foreach ($fileFields as $fileField) {
+            $fileField = trim(substr($fileField, strlen($field . '.')), '.*');
+
+            if (!$fileField && empty($value)) {
+                $this->attributes["{$field}_url"] = [];
+                continue;
+            }
+
+            if ($fileField && empty(Arr::get($value, $fileField))) {
+                Arr::set($value, "{$fileField}_url", []);
+            }
         }
     }
 

@@ -17,7 +17,7 @@ interface UploadOnEloquentModel
      *
      * @param Illuminate\Http\UploadedFile $file
      * @param string $folder
-     * @param mix $fileName
+     * @param mixed $fileName
      * @return string
      */
     public function upload(UploadedFile $file, $folder = '', $fileName = null): string;
@@ -67,7 +67,7 @@ interface UploadOnEloquentModel
      * To save file if change
      *
      * @param string $field
-     * @param mix $file
+     * @param mixed $file
      * @return string | null
      *
      * @throws Exception
