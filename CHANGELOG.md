@@ -25,3 +25,7 @@
 # 0.2.4 - 2021-10-26
 ## Fix bug
 - Fix update, show JSON file field when empty
+
+# 0.2.5 - 2022-06-23
+## Upgrade
+- Support laravel 9.x
