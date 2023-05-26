@@ -29,11 +29,13 @@ class UploadFileEloquentTest extends TestCase
 
         $storage = Storage::fake('local');
         Storage::shouldReceive('disk')->andReturn($storage);
-        $this->fileModelInstance
+        $result = $this->fileModelInstance
             ->fill([
                 'path' => UploadedFile::fake()->image(Str::random(12) . '.png'),
             ])
             ->save();
+
+        $this->assertTrue($result);
     }
 
     /** @test */
@@ -44,11 +46,12 @@ class UploadFileEloquentTest extends TestCase
         config('filesystems.default', null);
         $storage = Storage::fake('s3');
         Storage::shouldReceive('disk')->andReturn($storage);
-        $this->fileModelInstance
+        $result = $this->fileModelInstance
             ->fill([
                 'path' => UploadedFile::fake()->image(Str::random(12) . '.png'),
             ])
             ->save();
+        $this->assertTrue($result);
     }
 
     /** @test */

@@ -15,7 +15,7 @@ trait UploadFileJsonEloquent
      */
     private function saveFilePathToArray($field, $value)
     {
-        $fieldsMapped = $this->getFieldValueMappeds($field, $value);
+        $fieldsMapped = $this->getFieldValueMappers($field, $value);
 
         foreach ($fieldsMapped as $mapped) {
             $keyOfFile = $mapped['keyOfFile'];
@@ -42,7 +42,7 @@ trait UploadFileJsonEloquent
     }
 
     /**
-     * Forget field hase subfix `url`
+     * Forget field has suffix `url`
      *
      * @param string $field
      * @param string $keyOfFile
@@ -128,7 +128,7 @@ trait UploadFileJsonEloquent
      */
     private function assignFileFieldUrlToArray($field, $value)
     {
-        $fieldsMapped = $this->getFieldValueMappeds($field, $value);
+        $fieldsMapped = $this->getFieldValueMappers($field, $value);
 
         foreach ($fieldsMapped as $mapped) {
             $fieldKey = $field . '.' . $mapped['keyOfFile'];
@@ -165,21 +165,21 @@ trait UploadFileJsonEloquent
      * @param mixed $value
      * @return array
      */
-    private function getFieldValueMappeds($field, $value)
+    private function getFieldValueMappers($field, $value)
     {
         $fileFields = $this->getFileFields($field);
 
-        $fileFieldMappeds = [];
+        $fileFieldMappers = [];
         foreach ($fileFields as $fileField) {
             $subFileField = substr($fileField, strlen($field . '.'));
             foreach (array_keys(Arr::dot($value)) as $keyOfFile) {
                 if (preg_match($this->makeFieldRegex($subFileField), $keyOfFile)) {
-                    $fileFieldMappeds[] = compact('fileField', 'keyOfFile');
+                    $fileFieldMappers[] = compact('fileField', 'keyOfFile');
                 }
             }
         }
 
-        return $fileFieldMappeds;
+        return $fileFieldMappers;
     }
 
     /**
@@ -190,7 +190,7 @@ trait UploadFileJsonEloquent
     private function prepareFileOnJsonToDelete($field)
     {
         $value = parent::getAttribute($field);
-        $fieldsMapped = $this->getFieldValueMappeds($field, $value);
+        $fieldsMapped = $this->getFieldValueMappers($field, $value);
 
         foreach ($fieldsMapped as $mapped) {
             $this->filePathOnTrash[] = Arr::get($value, $mapped['keyOfFile']);

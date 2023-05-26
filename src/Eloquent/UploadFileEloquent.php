@@ -80,7 +80,7 @@ trait UploadFileEloquent
     private $filePathOnTrash = [];
 
     /**
-     * Overide boot model to delete file on storage
+     * Override boot model to delete file on storage
      *
      * @return void
      */
@@ -230,7 +230,7 @@ trait UploadFileEloquent
      */
     private function prepareFileName($field, $currentFileName = '')
     {
-        $customFileNameFunction = 'prepare' . toPasscalCase($field) . 'FileName';
+        $customFileNameFunction = 'prepare' . toPascalCase($field) . 'FileName';
 
         return method_exists($this, $customFileNameFunction)
             ? $this->{$customFileNameFunction}($currentFileName)
@@ -298,14 +298,14 @@ trait UploadFileEloquent
     }
 
     /**
-     * Overide get attribute
+     * Override get attribute
      *
      * @param string $field
      * @return mixed
      */
     public function getAttribute($field)
     {
-        if (hasSubfix($field, '_url')
+        if (hasSuffix($field, '_url')
             && !Str::contains($field, ['.', '*'])
             && $this->isFileField($fieldName = str_replace('_url', '', $field))
         ) {
@@ -326,7 +326,7 @@ trait UploadFileEloquent
     }
 
     /**
-     * Swich file fields of field and assign url to that
+     * Switch file fields of field and assign url to that
      *
      * @param string $field
      * @param mixed $value
@@ -357,7 +357,7 @@ trait UploadFileEloquent
     }
 
     /**
-     * Overide set attribute
+     * Override set attribute
      *
      * @param string $key
      * @param mixed $value
@@ -373,7 +373,7 @@ trait UploadFileEloquent
     }
 
     /**
-     * Overide toArray: refresh model, get file fields and conver to Array
+     * Override toArray: refresh model, get file fields and convert to Array
      *
      * @return array
      */

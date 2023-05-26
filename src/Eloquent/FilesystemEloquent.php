@@ -111,7 +111,7 @@ trait FilesystemEloquent
     }
 
     /**
-     * Get temporay url from s3 of private file
+     * Get temporary url from s3 of private file
      *
      * @param string $path
      * @return string
