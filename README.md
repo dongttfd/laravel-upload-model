@@ -2,7 +2,7 @@
 
 
 ## Laravel Support
-- `"laravel/framework": "^5.7|^6.0|^7.0|^8.0"`
+- `"laravel/framework": "^5.7|^6.0|^7.0|^8.0|^9.0|^10.0"`
 
 
 ## What It Does
