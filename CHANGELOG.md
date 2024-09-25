@@ -33,3 +33,7 @@
 # 0.2.6 - 2023-05-26
 ## Upgrade
 - Support laravel 10.x
+
+# 0.2.7 - 2024-09-25
+## Upgrade
+- Support laravel 11.x
